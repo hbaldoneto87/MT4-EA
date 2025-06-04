@@ -6,8 +6,8 @@ This repository contains an example MetaTrader 4 Expert Advisor designed for spr
 
 `MQL4/Experts/MultiPairSpreadEA.mq4` automatically collects all Market Watch symbols and checks the trend on higher timeframes:
 
-1. **Weekly trend** – price relative to the 20‑period SMA.
-2. **Daily confirmation** – 20 EMA aligned above or below the 50 EMA.
+1. **Weekly trend** – price relative to the 10‑period SMA.
+2. **Daily confirmation** – 50 EMA aligned above or below the 200 EMA.
 3. **Hourly entry** – price pulls back to the 20 EMA with an RSI filter.
 
 Stop loss and take profit are derived from the daily ATR (1.5× ATR for SL and 3× ATR for TP). Once price moves 1.5× ATR in profit, the stop is moved to break even. Lot size is calculated so that each trade risks **2% of the account balance** by default.

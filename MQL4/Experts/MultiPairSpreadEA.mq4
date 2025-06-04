@@ -48,15 +48,15 @@ void OnTick()
 int TrendDirection(string symbol)
 {
     double weeklyClose = iClose(symbol, PERIOD_W1, 1);
-    double weeklySMA   = iMA(symbol, PERIOD_W1, 20, 0, MODE_SMA, PRICE_CLOSE, 1);
+    double weeklySMA   = iMA(symbol, PERIOD_W1, 10, 0, MODE_SMA, PRICE_CLOSE, 1);
     if(weeklyClose==0 || weeklySMA==0) return 0;
 
-    double dailyEMA20  = iMA(symbol, PERIOD_D1, 20, 0, MODE_EMA, PRICE_CLOSE, 1);
     double dailyEMA50  = iMA(symbol, PERIOD_D1, 50, 0, MODE_EMA, PRICE_CLOSE, 1);
+    double dailyEMA200 = iMA(symbol, PERIOD_D1, 200, 0, MODE_EMA, PRICE_CLOSE, 1);
 
-    if(weeklyClose > weeklySMA && dailyEMA20 > dailyEMA50)
+    if(weeklyClose > weeklySMA && dailyEMA50 > dailyEMA200)
         return 1;   // long trend
-    if(weeklyClose < weeklySMA && dailyEMA20 < dailyEMA50)
+    if(weeklyClose < weeklySMA && dailyEMA50 < dailyEMA200)
         return -1;  // short trend
     return 0;
 }
