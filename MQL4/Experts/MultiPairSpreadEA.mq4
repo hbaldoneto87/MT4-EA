@@ -122,9 +122,12 @@ void ManageBreakeven(string symbol, double atrDaily)
                 int digits    = (int)MarketInfo(symbol, MODE_DIGITS);
                 if(OrderType()==OP_BUY)
                 {
-                    if(Bid - open >= atrDaily*AtrSLFactor && sl < open)
+                    double stopLevel = MarketInfo(symbol, MODE_STOPLEVEL) *
+                                      MarketInfo(symbol, MODE_POINT);
+                    if(Bid - open >= atrDaily*AtrSLFactor &&
+                       Bid - open >= stopLevel && sl < open)
                     {
-                        bool mod = OrderModify(OrderTicket(), open,
+                        bool mod = OrderModify(OrderTicket(), 0,
                                                 NormalizeDouble(open, digits),
                                                 OrderTakeProfit(), 0, clrNONE);
                         if(!mod)
@@ -134,9 +137,12 @@ void ManageBreakeven(string symbol, double atrDaily)
                 }
                 else if(OrderType()==OP_SELL)
                 {
-                    if(open - Ask >= atrDaily*AtrSLFactor && sl > open)
+                    double stopLevel = MarketInfo(symbol, MODE_STOPLEVEL) *
+                                      MarketInfo(symbol, MODE_POINT);
+                    if(open - Ask >= atrDaily*AtrSLFactor &&
+                       open - Ask >= stopLevel && sl > open)
                     {
-                        bool mod = OrderModify(OrderTicket(), open,
+                        bool mod = OrderModify(OrderTicket(), 0,
                                                 NormalizeDouble(open, digits),
                                                 OrderTakeProfit(), 0, clrNONE);
                         if(!mod)
