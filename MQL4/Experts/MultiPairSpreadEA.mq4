@@ -5,7 +5,7 @@ input double RiskPercent  = 2.0;    // % of account balance to risk per trade
 input int    AtrPeriod     = 14;     // ATR calculation period
 input double AtrSLFactor   = 1.5;    // Stop loss multiplier
 input double AtrTPFactor   = 3.0;    // Take profit multiplier
-input int    Slippage      = 3;      // Maximum slippage
+input int    Slippage      = 3;      // Maximum slippage (deviation)
 input int    MagicNumber   = 987654; // Magic number for orders
 
 string Symbols[];
@@ -21,10 +21,19 @@ int OnInit()
     ArrayResize(Symbols, total);
     for(int i=0; i<total; i++)
         Symbols[i] = SymbolName(i, true);
+
+    // trade logic is run on a timer instead of every tick
+    EventSetTimer(60*15); // check every 15 minutes
+
     return(INIT_SUCCEEDED);
 }
 
-void OnTick()
+void OnDeinit(const int reason)
+{
+    EventKillTimer();
+}
+
+void OnTimer()
 {
     for(int i=0; i<ArraySize(Symbols); i++)
     {
@@ -93,8 +102,9 @@ void OpenTrade(string symbol, int dir, double atrDaily)
     sl    = NormalizeDouble(sl, digits);
     tp    = NormalizeDouble(tp, digits);
 
-    int type = (dir>0) ? OP_BUY : OP_SELL;
-    int ticket = OrderSend(symbol, type, lot, price, Slippage, sl, tp, "TrendEA", MagicNumber, 0);
+    int type   = (dir>0) ? OP_BUY : OP_SELL;
+    int ticket = OrderSend(symbol, type, lot, price, Slippage, sl, tp,
+                           "TrendEA", MagicNumber, 0, clrNONE);
     if(ticket < 0)
         Print("OrderSend failed on ", symbol, " error ", GetLastError());
 }
@@ -112,13 +122,33 @@ void ManageBreakeven(string symbol, double atrDaily)
                 int digits    = (int)MarketInfo(symbol, MODE_DIGITS);
                 if(OrderType()==OP_BUY)
                 {
-                    if(Bid - open >= atrDaily*AtrSLFactor && sl < open)
-                        OrderModify(OrderTicket(), open, NormalizeDouble(open, digits), OrderTakeProfit(), 0);
+                    double stopLevel = MarketInfo(symbol, MODE_STOPLEVEL) *
+                                      MarketInfo(symbol, MODE_POINT);
+                    if(Bid - open >= atrDaily*AtrSLFactor &&
+                       Bid - open >= stopLevel && sl < open)
+                    {
+                        bool mod = OrderModify(OrderTicket(), 0,
+                                                NormalizeDouble(open, digits),
+                                                OrderTakeProfit(), 0, clrNONE);
+                        if(!mod)
+                            Print("OrderModify failed on ", symbol,
+                                  " error ", GetLastError());
+                    }
                 }
                 else if(OrderType()==OP_SELL)
                 {
-                    if(open - Ask >= atrDaily*AtrSLFactor && sl > open)
-                        OrderModify(OrderTicket(), open, NormalizeDouble(open, digits), OrderTakeProfit(), 0);
+                    double stopLevel = MarketInfo(symbol, MODE_STOPLEVEL) *
+                                      MarketInfo(symbol, MODE_POINT);
+                    if(open - Ask >= atrDaily*AtrSLFactor &&
+                       open - Ask >= stopLevel && sl > open)
+                    {
+                        bool mod = OrderModify(OrderTicket(), 0,
+                                                NormalizeDouble(open, digits),
+                                                OrderTakeProfit(), 0, clrNONE);
+                        if(!mod)
+                            Print("OrderModify failed on ", symbol,
+                                  " error ", GetLastError());
+                    }
                 }
             }
         }
